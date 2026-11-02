@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://groundlink.local/schemas/agent-contract-v1.schema.json",
+  "title": "GroundLink shared agent communication contract v1",
+  "oneOf": [
+    { "$ref": "#/$defs/health" },
+    { "$ref": "#/$defs/readiness" },
+    { "$ref": "#/$defs/heartbeat" },
+    { "$ref": "#/$defs/prepare" },
+    { "$ref": "#/$defs/start" },
+    { "$ref": "#/$defs/stop" },
+    { "$ref": "#/$defs/channelAction" },
+    { "$ref": "#/$defs/ingestion" }
+  ],
+  "$defs": {
+    "version": { "const": "1.0.0" },
+    "runId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "frameId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "scenario": { "enum": ["unlabeled", "baseline", "awgn_20db", "awgn_0db", "replay", "spoofing", "jamming", "malformed"] },
+    "identity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["agent_id", "role", "software_version", "contract_version"],
+      "properties": {
+        "contract_version": { "$ref": "#/$defs/version" },
+        "software_version": { "type": "string", "minLength": 1, "maxLength": 64 },
+        "agent_id": { "enum": ["vm1-satellite", "vm2-station", "vm3-channel"] },
+        "role": { "enum": ["SATELLITE", "STATION", "CHANNEL"] }
+      },
+      "allOf": [
+        { "if": { "properties": { "agent_id": { "const": "vm1-satellite" } } }, "then": { "properties": { "role": { "const": "SATELLITE" } } } },
+        { "if": { "properties": { "agent_id": { "const": "vm2-station" } } }, "then": { "properties": { "role": { "const": "STATION" } } } },
+        { "if": { "properties": { "agent_id": { "const": "vm3-channel" } } }, "then": { "properties": { "role": { "const": "CHANNEL" } } } }
+      ]
+    },
+    "capabilities": {
+      "type": "object", "additionalProperties": false,
+      "required": ["identity", "supported_scenarios", "supported_commands", "supported_contract_versions"],
+      "properties": {
+        "identity": { "$ref": "#/$defs/identity" },
+        "supported_scenarios": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "$ref": "#/$defs/scenario" } },
+        "supported_commands": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": { "enum": ["PREPARE", "START", "STOP"] } },
+        "supported_contract_versions": { "type": "array", "minItems": 1, "uniqueItems": true, "contains": { "$ref": "#/$defs/version" }, "items": { "$ref": "#/$defs/version" } }
+      }
+    },
+    "health": {
+      "type": "object", "additionalProperties": false,
+      "required": ["message_type", "contract_version", "identity", "observed_at", "status", "uptime_seconds"],
+      "properties": {
+        "message_type": { "const": "agent.health" }, "contract_version": { "$ref": "#/$defs/version" },
+        "identity": { "$ref": "#/$defs/identity" }, "observed_at": { "type": "string", "format": "date-time" },
+        "status": { "enum": ["HEALTHY", "DEGRADED", "UNHEALTHY"] }, "uptime_seconds": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "readiness": {
+      "type": "object", "additionalProperties": false,
+      "required": ["message_type", "contract_version", "identity", "observed_at", "ready", "state", "capabilities", "reason"],
+      "properties": {
+        "message_type": { "const": "agent.readiness" }, "contract_version": { "$ref": "#/$defs/version" },
+        "identity": { "$ref": "#/$defs/identity" }, "observed_at": { "type": "string", "format": "date-time" },
+        "ready": { "type": "boolean" }, "state": { "enum": ["IDLE", "PREPARED", "RUNNING", "STOPPING", "ERROR"] },
+        "capabilities": { "$ref": "#/$defs/capabilities" }, "reason": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 }
+      }
+    },
+    "heartbeat": {
+      "type": "object", "additionalProperties": false,
+      "required": ["message_type", "contract_version", "identity", "heartbeat_id", "observed_at", "state", "run_id"],
+      "properties": {
+        "message_type": { "const": "agent.heartbeat" }, "contract_version": { "$ref": "#/$defs/version" },
+        "identity": { "$ref": "#/$defs/identity" }, "heartbeat_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "observed_at": { "type": "string", "format": "date-time" }, "state": { "enum": ["IDLE", "PREPARED", "RUNNING", "STOPPING", "ERROR"] },
+        "run_id": { "oneOf": [{ "$ref": "#/$defs/runId" }, { "type": "null" }] }
+      }
+    },
+    "commandBase": {
+      "type": "object",
+      "required": ["contract_version", "command_type", "command_id", "run_id", "scenario", "issued_at"],
+      "properties": {
+        "contract_version": { "$ref": "#/$defs/version" }, "command_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "run_id": { "$ref": "#/$defs/runId" }, "scenario": { "$ref": "#/$defs/scenario" }, "issued_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "prepare": {
+      "allOf": [{ "$ref": "#/$defs/commandBase" }, { "type": "object", "additionalProperties": false,
+        "required": ["contract_version", "command_type", "command_id", "run_id", "scenario", "issued_at"],
+        "properties": { "contract_version": { "$ref": "#/$defs/version" }, "command_type": { "const": "PREPARE" }, "command_id": { "type": "string" }, "run_id": { "$ref": "#/$defs/runId" }, "scenario": { "$ref": "#/$defs/scenario" }, "issued_at": { "type": "string", "format": "date-time" } } }] 
+    },
+    "start": {
+      "allOf": [{ "$ref": "#/$defs/commandBase" }, { "type": "object", "additionalProperties": false,
+        "required": ["contract_version", "command_type", "command_id", "run_id", "scenario", "issued_at", "preparation_id"],
+        "properties": { "contract_version": { "$ref": "#/$defs/version" }, "command_type": { "const": "START" }, "command_id": { "type": "string" }, "run_id": { "$ref": "#/$defs/runId" }, "scenario": { "$ref": "#/$defs/scenario" }, "issued_at": { "type": "string", "format": "date-time" }, "preparation_id": { "type": "string", "minLength": 1, "maxLength": 128 } } }]
+    },
+    "stop": {
+      "allOf": [{ "$ref": "#/$defs/commandBase" }, { "type": "object", "additionalProperties": false,
+        "required": ["contract_version", "command_type", "command_id", "run_id", "scenario", "issued_at", "reason"],
+        "properties": { "contract_version": { "$ref": "#/$defs/version" }, "command_type": { "const": "STOP" }, "command_id": { "type": "string" }, "run_id": { "$ref": "#/$defs/runId" }, "scenario": { "$ref": "#/$defs/scenario" }, "issued_at": { "type": "string", "format": "date-time" }, "reason": { "type": "string", "minLength": 1, "maxLength": 256 } } }]
+    },
+    "channelAction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["message_type", "contract_version", "run_id", "frame_id", "event_id", "event_time", "scenario", "disposition", "attack", "detail"],
+      "properties": {
+        "message_type": { "const": "channel.action" }, "contract_version": { "$ref": "#/$defs/version" }, "run_id": { "$ref": "#/$defs/runId" },
+        "frame_id": { "$ref": "#/$defs/frameId" }, "event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "event_time": { "type": "string", "format": "date-time" }, "scenario": { "$ref": "#/$defs/scenario" },
+        "disposition": { "enum": ["FORWARD", "DROP", "ATTACK"] }, "attack": { "type": ["string", "null"], "enum": ["AWGN", "JAMMING", "SPOOFING", "REPLAY", "MALFORMED", null] },
+        "detail": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 }
+      },
+      "allOf": [{ "if": { "properties": { "disposition": { "const": "ATTACK" } } }, "then": { "properties": { "attack": { "type": "string" } } }, "else": { "properties": { "attack": { "type": "null" } } } }]
+    },
+    "ingestion": {
+      "type": "object", "additionalProperties": false,
+      "required": ["contract_version", "identity", "frame_id", "event"],
+      "properties": {
+        "contract_version": { "$ref": "#/$defs/version" }, "identity": { "$ref": "#/$defs/identity" }, "frame_id": { "$ref": "#/$defs/frameId" },
+        "event": { "$ref": "telemetry-v1.schema.json" }
+      }
+    }
+  }
+}

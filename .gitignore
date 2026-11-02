@@ -13,3 +13,22 @@ venv/
 .env.*
 *.pem
 *.key
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs
+*.log
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Temporary files
+.cache/
+.pytest_cache/

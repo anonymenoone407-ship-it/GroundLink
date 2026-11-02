@@ -1,0 +1,31 @@
+{
+  "coordinates": {
+    "latitude": 36.0,
+    "longitude": 11.0
+  },
+  "nasa_url": "https://power.larc.nasa.gov/api/temporal/hourly/point?parameters=WS10M,WD10M&community=AG&longitude=11.0&latitude=36.0&start=20240101&end=20251231&format=CSV&time-standard=UTC",
+  "processing": {
+    "duplicates": "reject",
+    "identifier": "SHA256(source, coordinates, timestamp), first 20 hex",
+    "missing_value": -999,
+    "reject_negative_speed": true,
+    "reject_non_finite": true,
+    "sort": "source_timestamp_utc ascending",
+    "valid_direction_range_degrees": [
+      0,
+      360
+    ]
+  },
+  "source": "NASA POWER hourly point API",
+  "source_file": "data/raw/nasa_power_2024_2025.csv",
+  "source_period": {
+    "end": "2025-12-31T23:00:00Z",
+    "start": "2024-01-01T00:00:00Z"
+  },
+  "source_sha256": "c7a2e10417084dc6adc4ed74b7663c9f386fc1da794656aac59dbab6305de82a",
+  "time_standard": "UTC",
+  "units": {
+    "wind_direction": "degrees",
+    "wind_speed": "m/s"
+  }
+}
