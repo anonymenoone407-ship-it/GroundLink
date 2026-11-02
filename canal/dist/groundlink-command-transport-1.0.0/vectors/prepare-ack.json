@@ -1,0 +1,1 @@
+{"protocol_version":"1.0","request_id":"golden-prepare-request","agent_id":"vm1-satellite","command_id":"golden-prepare-command","command_type":"PREPARE","run_id":"0123456789abcdef0123456789abcdef","scenario":"baseline","accepted":true,"state":"PREPARED","preparation_id":"golden-preparation-id","reason":null,"observed_at":"2026-11-01T12:00:01+00:00"}
