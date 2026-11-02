@@ -1,0 +1,1 @@
+{"protocol_version":"1.0","request_id":"golden-stop-request","agent_id":"vm1-satellite","command_id":"golden-stop-command","command_type":"STOP","run_id":"0123456789abcdef0123456789abcdef","scenario":"baseline","accepted":true,"state":"IDLE","preparation_id":null,"reason":null,"observed_at":"2026-11-01T12:01:01+00:00"}

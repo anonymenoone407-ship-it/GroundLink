@@ -1,0 +1,1 @@
+{"protocol_version":"1.0","request_id":"golden-start-request","agent_id":"vm1-satellite","command_id":"golden-start-command","command_type":"START","run_id":"0123456789abcdef0123456789abcdef","scenario":"baseline","accepted":true,"state":"RUNNING","preparation_id":"golden-preparation-id","reason":null,"observed_at":"2026-11-01T12:00:03+00:00"}

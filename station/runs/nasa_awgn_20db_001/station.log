@@ -1,0 +1,46 @@
+[STATION] Trust Anchor Ed25519 charge
+[STATION] Anti-Replay SQLite active
+[STATION] Replay DB : /home/vboxuser/groundlink/state/replay_guard.sqlite3
+[STATION] Monitoring DB : /home/vboxuser/groundlink/state/monitoring.sqlite3
+[STATION] Run ID : e2ec9fd77e3040fc8279c4b3a508f4b2
+[STATION] Scenario : unlabeled
+[STATION] Secure BPSK Receiver + RF Detection + SQLite
+[STATION] Ecoute : tcp://10.10.2.10:5556
+[STATION] Attente des trames IQ...
+
+[RX] Bloc IQ #1 | 98816 octets
+[RF] Power=3.05 dB | EVM=99.98% | Gain=1.005 | SpectralPeak=10.89 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL
+[REJECT] Bloc #1 | reason=CRC_INVALID
+[DB] Event #61 saved | RF=ANOMALY | REJECT | CRC_INVALID
+
+[RX] Bloc IQ #2 | 98816 octets
+[RF] Power=2.98 dB | EVM=99.86% | Gain=0.997 | SpectralPeak=10.67 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL
+[REJECT] Bloc #2 | reason=CRC_INVALID
+[DB] Event #62 saved | RF=ANOMALY | REJECT | CRC_INVALID
+
+[RX] Bloc IQ #3 | 98816 octets
+[RF] Power=3.00 dB | EVM=100.45% | Gain=0.996 | SpectralPeak=11.60 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL
+[REJECT] Bloc #3 | reason=CRC_INVALID
+[DB] Event #63 saved | RF=ANOMALY | REJECT | CRC_INVALID
+
+[RX] Bloc IQ #4 | 98816 octets
+[RF] Power=3.01 dB | EVM=98.69% | Gain=1.007 | SpectralPeak=12.28 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL
+[REJECT] Bloc #4 | reason=CRC_INVALID
+[DB] Event #64 saved | RF=ANOMALY | REJECT | CRC_INVALID
+
+[RX] Bloc IQ #5 | 98816 octets
+[RF] Power=3.00 dB | EVM=99.52% | Gain=1.001 | SpectralPeak=11.83 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL
+[REJECT] Bloc #5 | reason=CRC_INVALID
+[DB] Event #65 saved | RF=ANOMALY | REJECT | CRC_INVALID
+
+========== BILAN STATION ==========
+IQ recus : 5
+ACCEPT : 0
+REJECT : 5
+DB errors : 0
+===================================

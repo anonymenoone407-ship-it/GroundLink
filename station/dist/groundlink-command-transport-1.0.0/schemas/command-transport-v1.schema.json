@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://groundlink.local/schemas/command-transport-v1.schema.json",
+  "title": "GroundLink command transport protocol v1",
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/acknowledgement" }
+  ],
+  "$defs": {
+    "requestId": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$" },
+    "runId": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+    "scenario": { "enum": ["unlabeled", "baseline", "awgn_20db", "awgn_0db", "replay", "spoofing", "jamming", "malformed"] },
+    "command": {
+      "oneOf": [
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["contract_version", "command_type", "command_id", "run_id", "scenario", "issued_at"],
+          "properties": {
+            "contract_version": { "const": "1.0.0" }, "command_type": { "const": "PREPARE" },
+            "command_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "run_id": { "$ref": "#/$defs/runId" }, "scenario": { "$ref": "#/$defs/scenario" },
+            "issued_at": { "type": "string", "format": "date-time" }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["contract_version", "command_type", "command_id", "run_id", "scenario", "issued_at", "preparation_id"],
+          "properties": {
+            "contract_version": { "const": "1.0.0" }, "command_type": { "const": "START" },
+            "command_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "run_id": { "$ref": "#/$defs/runId" }, "scenario": { "$ref": "#/$defs/scenario" },
+            "issued_at": { "type": "string", "format": "date-time" },
+            "preparation_id": { "type": "string", "minLength": 1, "maxLength": 128 }
+          }
+        },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["contract_version", "command_type", "command_id", "run_id", "scenario", "issued_at", "reason"],
+          "properties": {
+            "contract_version": { "const": "1.0.0" }, "command_type": { "const": "STOP" },
+            "command_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "run_id": { "$ref": "#/$defs/runId" }, "scenario": { "$ref": "#/$defs/scenario" },
+            "issued_at": { "type": "string", "format": "date-time" },
+            "reason": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        }
+      ]
+    },
+    "request": {
+      "type": "object", "additionalProperties": false,
+      "required": ["protocol_version", "request_id", "sent_at", "deadline_at", "target_agent_id", "command"],
+      "properties": {
+        "protocol_version": { "const": "1.0" }, "request_id": { "$ref": "#/$defs/requestId" },
+        "sent_at": { "type": "string", "format": "date-time" }, "deadline_at": { "type": "string", "format": "date-time" },
+        "target_agent_id": { "enum": ["vm1-satellite", "vm3-channel"] }, "command": { "$ref": "#/$defs/command" }
+      }
+    },
+    "acknowledgement": {
+      "type": "object", "additionalProperties": false,
+      "required": ["protocol_version", "request_id", "agent_id", "command_id", "command_type", "run_id", "scenario", "accepted", "state", "preparation_id", "reason", "observed_at"],
+      "properties": {
+        "protocol_version": { "const": "1.0" }, "request_id": { "$ref": "#/$defs/requestId" },
+        "agent_id": { "enum": ["vm1-satellite", "vm3-channel"] },
+        "command_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "command_type": { "enum": ["PREPARE", "START", "STOP"] }, "run_id": { "$ref": "#/$defs/runId" },
+        "scenario": { "$ref": "#/$defs/scenario" }, "accepted": { "type": "boolean" },
+        "state": { "enum": ["IDLE", "PREPARED", "RUNNING", "STOPPING", "ERROR"] },
+        "preparation_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+        "reason": { "type": ["string", "null"], "minLength": 1, "maxLength": 256 },
+        "observed_at": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

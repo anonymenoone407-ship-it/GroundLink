@@ -1,0 +1,46 @@
+[STATION] Trust Anchor Ed25519 charge
+[STATION] Anti-Replay SQLite active
+[STATION] Replay DB : /home/vboxuser/groundlink/state/replay_guard.sqlite3
+[STATION] Monitoring DB : /home/vboxuser/groundlink/state/monitoring.sqlite3
+[STATION] Run ID : 3eb974b426a34b8d99d9bbaf5983ae75
+[STATION] Scenario : unlabeled
+[STATION] Secure BPSK Receiver + RF Detection + SQLite
+[STATION] Ecoute : tcp://10.10.2.10:5556
+[STATION] Attente des trames IQ...
+
+[RX] Bloc IQ #1 | 98816 octets
+[RF] Power=2.21 dB | EVM=79.01% | Gain=1.012 | SpectralPeak=76.29 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL, SPECTRAL_PEAK_HIGH
+[ACCEPT] seq=1 | satellite=SAT-001 | wind=4.09 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #66 saved | RF=ANOMALY | ACCEPT | OK
+
+[RX] Bloc IQ #2 | 98816 octets
+[RF] Power=2.21 dB | EVM=78.91% | Gain=1.013 | SpectralPeak=75.32 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL, SPECTRAL_PEAK_HIGH
+[ACCEPT] seq=2 | satellite=SAT-001 | wind=4.83 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #67 saved | RF=ANOMALY | ACCEPT | OK
+
+[RX] Bloc IQ #3 | 98816 octets
+[RF] Power=2.21 dB | EVM=78.93% | Gain=1.013 | SpectralPeak=75.44 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL, SPECTRAL_PEAK_HIGH
+[ACCEPT] seq=3 | satellite=SAT-001 | wind=5.06 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #68 saved | RF=ANOMALY | ACCEPT | OK
+
+[RX] Bloc IQ #4 | 98816 octets
+[RF] Power=2.21 dB | EVM=79.00% | Gain=1.012 | SpectralPeak=76.15 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL, SPECTRAL_PEAK_HIGH
+[ACCEPT] seq=4 | satellite=SAT-001 | wind=5.02 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #69 saved | RF=ANOMALY | ACCEPT | OK
+
+[RX] Bloc IQ #5 | 98816 octets
+[RF] Power=2.21 dB | EVM=78.97% | Gain=1.012 | SpectralPeak=75.88 dB
+[RF-DETECT] ANOMALY | reasons=EVM_CRITICAL, SPECTRAL_PEAK_HIGH
+[ACCEPT] seq=5 | satellite=SAT-001 | wind=4.87 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #70 saved | RF=ANOMALY | ACCEPT | OK
+
+========== BILAN STATION ==========
+IQ recus : 5
+ACCEPT : 5
+REJECT : 0
+DB errors : 0
+===================================

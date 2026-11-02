@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://groundlink.local/schemas/telemetry-v1.schema.json",
+  "title": "GroundLink Mission Control Telemetry v1",
+  "oneOf": [
+    { "$ref": "#/$defs/satelliteEvent" },
+    { "$ref": "#/$defs/channelEvent" },
+    { "$ref": "#/$defs/stationEvent" }
+  ],
+  "$defs": {
+    "base": {
+      "type": "object",
+      "required": ["schema_version", "event_type", "event_id", "run_id", "event_time", "scenario"],
+      "properties": {
+        "schema_version": { "const": "1.0.0" },
+        "event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "run_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+        "event_time": { "type": "string", "format": "date-time" },
+        "scenario": { "enum": ["unlabeled", "baseline", "awgn_20db", "awgn_0db", "replay", "spoofing", "jamming", "malformed"] }
+      }
+    },
+    "satelliteEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["schema_version", "event_type", "event_id", "run_id", "event_time", "scenario", "satellite_id", "session_id", "sequence_number"],
+          "properties": {
+            "schema_version": { "const": "1.0.0" }, "event_type": { "const": "satellite.telemetry_transmitted" },
+            "event_id": { "type": "string", "minLength": 1, "maxLength": 128 }, "run_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "event_time": { "type": "string", "format": "date-time" }, "scenario": { "$ref": "#/$defs/scenario" },
+            "satellite_id": { "type": "string", "minLength": 1, "maxLength": 64 }, "session_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+            "sequence_number": { "type": "integer", "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "channelEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["schema_version", "event_type", "event_id", "run_id", "event_time", "scenario", "iq_bytes", "power_db_rel", "evm_percent", "estimated_gain", "residual_spectral_peak_db"],
+          "properties": {
+            "schema_version": { "const": "1.0.0" }, "event_type": { "const": "channel.rf_observed" },
+            "event_id": { "type": "string", "minLength": 1, "maxLength": 128 }, "run_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "event_time": { "type": "string", "format": "date-time" }, "scenario": { "$ref": "#/$defs/scenario" }, "iq_bytes": { "type": "integer", "minimum": 0 },
+            "power_db_rel": { "$ref": "#/$defs/nullableNumber" }, "evm_percent": { "$ref": "#/$defs/nullableNonnegativeNumber" },
+            "estimated_gain": { "$ref": "#/$defs/nullableNonnegativeNumber" }, "residual_spectral_peak_db": { "$ref": "#/$defs/nullableNumber" }
+          }
+        }
+      ]
+    },
+    "stationEvent": {
+      "allOf": [
+        { "$ref": "#/$defs/base" },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["schema_version", "event_type", "event_id", "run_id", "event_time", "scenario", "station_event_id", "decision", "reason", "rf_level", "rf_reasons", "iq_bytes", "processing_ms", "satellite_id", "session_id", "sequence_number", "decision_source"],
+          "properties": {
+            "schema_version": { "const": "1.0.0" }, "event_type": { "const": "station.frame_decided" },
+            "event_id": { "type": "string", "minLength": 1, "maxLength": 128 }, "run_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+            "event_time": { "type": "string", "format": "date-time" }, "scenario": { "$ref": "#/$defs/scenario" },
+            "station_event_id": { "type": "integer", "minimum": 1 }, "decision": { "enum": ["ACCEPT", "REJECT"] },
+            "reason": { "type": "string", "minLength": 1, "maxLength": 256 }, "rf_level": { "enum": ["NORMAL", "DEGRADED", "ANOMALY", "UNKNOWN"] },
+            "rf_reasons": { "type": "string", "minLength": 1, "maxLength": 1024 }, "iq_bytes": { "type": "integer", "minimum": 0 },
+            "processing_ms": { "$ref": "#/$defs/nullableNonnegativeNumber" }, "satellite_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 64 },
+            "session_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 }, "sequence_number": { "type": ["integer", "null"], "minimum": 1 },
+            "decision_source": { "const": "station_receiver" }
+          },
+          "allOf": [
+            { "if": { "properties": { "decision": { "const": "ACCEPT" } } }, "then": { "properties": { "satellite_id": { "type": "string" }, "session_id": { "type": "string" }, "sequence_number": { "type": "integer" } } } },
+            { "if": { "properties": { "decision": { "const": "REJECT" } } }, "then": { "properties": { "satellite_id": { "type": "null" }, "session_id": { "type": "null" }, "sequence_number": { "type": "null" } } } }
+          ]
+        }
+      ]
+    },
+    "scenario": { "enum": ["unlabeled", "baseline", "awgn_20db", "awgn_0db", "replay", "spoofing", "jamming", "malformed"] },
+    "nullableNumber": { "type": ["number", "null"] },
+    "nullableNonnegativeNumber": { "type": ["number", "null"], "minimum": 0 }
+  }
+}

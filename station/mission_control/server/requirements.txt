@@ -1,0 +1,5 @@
+# Install only inside ~/groundlink/.venv
+fastapi==0.162.0
+httpx==0.28.1
+uvicorn==0.54.0
+jsonschema==4.26.0

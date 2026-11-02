@@ -1,0 +1,15 @@
+{
+  "enabled": false,
+  "command_protocol_version": "1.0",
+  "agent_contract_version": "1.0.0",
+  "tls_minimum": "1.3",
+  "ca_certificate": "/etc/groundlink/pki/ca/groundlink-lab-ca.pem",
+  "certificate_revocation_list": "/etc/groundlink/pki/crl/groundlink-lab-ca.crl.pem",
+  "station_command_certificate": "/etc/groundlink/pki/certs/station-command-client.pem",
+  "station_command_private_key": "/etc/groundlink/private/station-command-client.key",
+  "satellite": {"host": "10.10.3.10", "port": 7443, "expected_dns_san": "vm1-satellite"},
+  "channel": {"host": "10.10.3.30", "port": 7443, "expected_dns_san": "vm3-channel"},
+  "connect_timeout_seconds": 3,
+  "io_timeout_seconds": 3,
+  "retries": 1
+}

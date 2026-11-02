@@ -1,0 +1,46 @@
+[STATION] Trust Anchor Ed25519 charge
+[STATION] Anti-Replay SQLite active
+[STATION] Replay DB : /home/vboxuser/groundlink/state/replay_guard.sqlite3
+[STATION] Monitoring DB : /home/vboxuser/groundlink/state/monitoring.sqlite3
+[STATION] Run ID : 477556ef54914a739ff615da8cacb8e4
+[STATION] Scenario : spoofing
+[STATION] Secure BPSK Receiver + RF Detection + SQLite
+[STATION] Ecoute : tcp://10.10.2.10:5556
+[STATION] Attente des trames IQ...
+
+[RX] Bloc IQ #1 | 98816 octets
+[RF] Power=0.00 dB | EVM=0.00% | Gain=1.000 | SpectralPeak=N/A
+[RF-DETECT] NORMAL | reasons=RF_OK
+[ACCEPT] seq=1 | satellite=SAT-001 | wind=4.09 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #86 saved | RF=NORMAL | ACCEPT | OK
+
+[RX] Bloc IQ #2 | 98816 octets
+[RF] Power=0.00 dB | EVM=0.00% | Gain=1.000 | SpectralPeak=N/A
+[RF-DETECT] NORMAL | reasons=RF_OK
+[ACCEPT] seq=2 | satellite=SAT-001 | wind=4.83 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #87 saved | RF=NORMAL | ACCEPT | OK
+
+[RX] Bloc IQ #3 | 98816 octets
+[RF] Power=0.00 dB | EVM=0.00% | Gain=1.000 | SpectralPeak=N/A
+[RF-DETECT] NORMAL | reasons=RF_OK
+[REJECT] Bloc #3 | reason=SIGNATURE_INVALID
+[DB] Event #88 saved | RF=NORMAL | REJECT | SIGNATURE_INVALID
+
+[RX] Bloc IQ #4 | 98816 octets
+[RF] Power=0.00 dB | EVM=0.00% | Gain=1.000 | SpectralPeak=N/A
+[RF-DETECT] NORMAL | reasons=RF_OK
+[ACCEPT] seq=4 | satellite=SAT-001 | wind=5.02 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #89 saved | RF=NORMAL | ACCEPT | OK
+
+[RX] Bloc IQ #5 | 98816 octets
+[RF] Power=0.00 dB | EVM=0.00% | Gain=1.000 | SpectralPeak=N/A
+[RF-DETECT] NORMAL | reasons=RF_OK
+[ACCEPT] seq=5 | satellite=SAT-001 | wind=4.87 m/s | CRC32=OK | Ed25519=OK | AntiReplay=OK
+[DB] Event #90 saved | RF=NORMAL | ACCEPT | OK
+
+========== BILAN STATION ==========
+IQ recus : 5
+ACCEPT : 4
+REJECT : 1
+DB errors : 0
+===================================

@@ -1,0 +1,498 @@
+
+import sqlite3
+from contextlib import closing
+from pathlib import Path
+
+import pandas as pd
+import streamlit as st
+
+from anomaly_detector import detect_rf_anomaly
+
+
+# ==========================================
+# CONFIGURATION
+# ==========================================
+
+DB_PATH = (
+    Path(__file__).resolve().parent
+    / "state"
+    / "monitoring.sqlite3"
+)
+
+st.set_page_config(
+    page_title="GroundLink Guardian",
+    page_icon="🛰️",
+    layout="wide",
+)
+
+
+# ==========================================
+# LECTURE SQLITE (LECTURE SEULE)
+# ==========================================
+
+def load_events():
+    if not DB_PATH.is_file():
+        st.error(f"Base SQLite introuvable : {DB_PATH}")
+        st.stop()
+
+    query = """
+        SELECT
+            id,
+            event_time,
+            run_id,
+            scenario,
+            iq_bytes,
+            power_db_rel,
+            evm_percent,
+            estimated_gain,
+            residual_spectral_peak_db,
+            status,
+            reason,
+            rf_level,
+            rf_reasons,
+            processing_ms
+        FROM rx_events
+        ORDER BY id
+    """
+
+    uri = f"{DB_PATH.as_uri()}?mode=ro"
+
+    try:
+        with closing(
+            sqlite3.connect(uri, uri=True, timeout=5)
+        ) as conn:
+            return pd.read_sql_query(query, conn)
+
+    except (sqlite3.Error, pd.errors.DatabaseError) as error:
+        st.error(f"Erreur de lecture SQLite : {error}")
+        st.stop()
+
+
+# ==========================================
+# RECALCUL HISTORIQUE DES DIAGNOSTICS RF
+# ==========================================
+
+def as_optional_float(value):
+    if pd.isna(value):
+        return None
+
+    return float(value)
+
+
+def add_historical_diagnostics(events):
+    # Cette operation ne modifie jamais SQLite.
+    events = events.copy()
+
+    events["rf_origin"] = "ENREGISTRE"
+
+    events["rf_level"] = (
+        events["rf_level"].fillna("NON_CALCULE")
+    )
+
+    events["rf_reasons"] = (
+        events["rf_reasons"].fillna("NON_CALCULE")
+    )
+
+    for idx in events.index[
+        events["rf_level"] == "NON_CALCULE"
+    ]:
+        row = events.loc[idx]
+
+        metrics = {
+            "power_db_rel": as_optional_float(
+                row["power_db_rel"]
+            ),
+            "evm_percent": as_optional_float(
+                row["evm_percent"]
+            ),
+            "estimated_gain": as_optional_float(
+                row["estimated_gain"]
+            ),
+            "residual_spectral_peak_db": as_optional_float(
+                row["residual_spectral_peak_db"]
+            ),
+        }
+
+        diagnosis = detect_rf_anomaly(metrics)
+
+        events.at[idx, "rf_level"] = diagnosis["level"]
+
+        events.at[idx, "rf_reasons"] = ", ".join(
+            diagnosis["reasons"]
+        )
+
+        events.at[idx, "rf_origin"] = "RETRO_CALCULE"
+
+    return events
+
+
+# ==========================================
+# EN-TETE
+# ==========================================
+
+st.title("🛰️ GroundLink Guardian")
+
+st.subheader("Secure Satellite Ocean-Wind Downlink")
+
+st.caption(
+    "RF Monitoring | Anomaly Detection | "
+    "Ed25519 Authentication | Anti-Replay"
+)
+
+if st.button("🔄 Actualiser les donnees"):
+    st.rerun()
+
+
+# ==========================================
+# CHARGEMENT DES DONNEES
+# ==========================================
+
+df = load_events()
+
+if df.empty:
+    st.warning("Aucune observation enregistree.")
+    st.stop()
+
+df = add_historical_diagnostics(df)
+
+
+# ==========================================
+# FILTRES
+# ==========================================
+
+st.sidebar.header("Filtres")
+
+scenarios = (
+    ["Tous"]
+    + sorted(df["scenario"].dropna().unique().tolist())
+)
+
+selected_scenario = st.sidebar.selectbox(
+    "Scenario RF",
+    scenarios,
+)
+
+selected_status = st.sidebar.selectbox(
+    "Decision de securite",
+    ["Toutes", "ACCEPT", "REJECT"],
+)
+
+filtered = df.copy()
+
+if selected_scenario != "Tous":
+    filtered = filtered[
+        filtered["scenario"] == selected_scenario
+    ]
+
+if selected_status != "Toutes":
+    filtered = filtered[
+        filtered["status"] == selected_status
+    ]
+
+
+# ==========================================
+# VUE GENERALE
+# ==========================================
+
+total = len(filtered)
+
+accepted = int(
+    (filtered["status"] == "ACCEPT").sum()
+)
+
+rejected = int(
+    (filtered["status"] == "REJECT").sum()
+)
+
+anomalies = int(
+    (filtered["rf_level"] == "ANOMALY").sum()
+)
+
+st.header("Vue generale")
+
+c1, c2, c3, c4 = st.columns(4)
+
+c1.metric("IQ recus", total)
+c2.metric("ACCEPT", accepted)
+c3.metric("REJECT", rejected)
+c4.metric("RF ANOMALY", anomalies)
+
+
+# ==========================================
+# CLASSIFICATION RF
+# ==========================================
+
+st.header("Diagnostic RF")
+
+levels = [
+    "NORMAL",
+    "DEGRADED",
+    "ANOMALY",
+    "UNKNOWN",
+    "NON_CALCULE",
+]
+
+level_counts = (
+    filtered["rf_level"]
+    .value_counts()
+    .reindex(levels, fill_value=0)
+)
+
+st.bar_chart(level_counts)
+
+st.caption(
+    "ENREGISTRE : diagnostic produit pendant la reception. "
+    "RETRO_CALCULE : diagnostic reconstruit pour l'affichage "
+    "a partir des metriques historiques. "
+    "UNKNOWN : metriques insuffisantes."
+)
+
+
+# ==========================================
+# SECURITE PAR SCENARIO
+# ==========================================
+
+st.header("Securite par scenario")
+
+if filtered.empty:
+    st.info("Aucune donnee pour les filtres choisis.")
+
+else:
+    security_counts = (
+        filtered.groupby(["scenario", "status"])
+        .size()
+        .unstack(fill_value=0)
+        .reindex(
+            columns=["ACCEPT", "REJECT"],
+            fill_value=0,
+        )
+    )
+
+    st.bar_chart(security_counts)
+
+
+# ==========================================
+# CENTRE D'ALERTES
+# ==========================================
+
+st.header("Centre d'alertes")
+
+# Anomalies RF
+rf_alerts = filtered[
+    filtered["rf_level"] == "ANOMALY"
+]
+
+# Toutes les trames rejetees
+rejected_events = filtered[
+    filtered["status"] == "REJECT"
+]
+
+# Alertes liees a la signature et au rejeu
+security_reasons = [
+    "SIGNATURE_INVALID",
+    "REPLAY_DETECTED",
+]
+
+security_alerts = rejected_events[
+    rejected_events["reason"].isin(security_reasons)
+]
+
+
+# ------------------------------------------
+# COMPTEURS DES ALERTES
+# ------------------------------------------
+
+a1, a2, a3 = st.columns(3)
+
+a1.metric(
+    "Anomalies RF",
+    len(rf_alerts)
+)
+
+a2.metric(
+    "Trames rejetees",
+    len(rejected_events)
+)
+
+a3.metric(
+    "Alertes authentification / rejeu",
+    len(security_alerts)
+)
+
+
+# ------------------------------------------
+# MOTIFS DES REJETS
+# ------------------------------------------
+
+st.subheader("Motifs des rejets")
+
+if rejected_events.empty:
+
+    st.success(
+        "Aucune trame rejetee dans la selection."
+    )
+
+else:
+
+    reason_counts = (
+        rejected_events["reason"]
+        .fillna("UNKNOWN_REASON")
+        .value_counts()
+        .rename_axis("Motif")
+        .reset_index(name="Occurrences")
+    )
+
+    st.dataframe(
+        reason_counts,
+        use_container_width=True,
+        hide_index=True,
+    )
+
+
+# ------------------------------------------
+# HISTORIQUE DES ALERTES
+# ------------------------------------------
+
+st.subheader("Historique des alertes")
+
+alerts = filtered[
+    (filtered["rf_level"] == "ANOMALY")
+    | (filtered["status"] == "REJECT")
+]
+
+alerts = alerts.sort_values(
+    "id",
+    ascending=False
+)
+
+alert_columns = [
+    "id",
+    "event_time",
+    "scenario",
+    "rf_level",
+    "rf_reasons",
+    "status",
+    "reason",
+    "rf_origin",
+]
+
+if alerts.empty:
+
+    st.info("Aucune alerte dans la selection.")
+
+else:
+
+    st.dataframe(
+        alerts[alert_columns],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+st.caption(
+    "RF ANOMALY indique une deviation radio, "
+    "pas une preuve d'attaque. "
+    "SIGNATURE_INVALID et REPLAY_DETECTED "
+    "sont distingues des perturbations RF "
+    "et des erreurs de decodage."
+)
+
+
+# ==========================================
+# GRAPHIQUES RF
+# ==========================================
+
+st.header("Evolution du signal RF")
+
+left, right = st.columns(2)
+
+with left:
+
+    st.subheader("EVM (%)")
+
+    evm_data = (
+        filtered[["id", "evm_percent"]]
+        .dropna()
+        .set_index("id")
+    )
+
+    if not evm_data.empty:
+        st.line_chart(evm_data)
+
+    else:
+        st.info("Aucune mesure EVM.")
+
+
+with right:
+
+    st.subheader("Puissance (dB relatif)")
+
+    power_data = (
+        filtered[["id", "power_db_rel"]]
+        .dropna()
+        .set_index("id")
+    )
+
+    if not power_data.empty:
+        st.line_chart(power_data)
+
+    else:
+        st.info("Aucune mesure de puissance.")
+
+
+# ==========================================
+# HISTORIQUE COMPLET
+# ==========================================
+
+st.header("Historique des observations")
+
+columns = [
+    "id",
+    "event_time",
+    "scenario",
+    "rf_level",
+    "rf_reasons",
+    "rf_origin",
+    "status",
+    "reason",
+    "evm_percent",
+    "power_db_rel",
+    "estimated_gain",
+    "residual_spectral_peak_db",
+    "processing_ms",
+]
+
+display_df = (
+    filtered
+    .sort_values("id", ascending=False)
+    [columns]
+    .copy()
+)
+
+numeric_columns = [
+    "evm_percent",
+    "power_db_rel",
+    "estimated_gain",
+    "residual_spectral_peak_db",
+    "processing_ms",
+]
+
+display_df[numeric_columns] = (
+    display_df[numeric_columns].round(2)
+)
+
+st.dataframe(
+    display_df,
+    use_container_width=True,
+    hide_index=True,
+)
+
+st.caption(
+    "Le diagnostic RF et la decision cryptographique "
+    "sont independants. "
+    "Les seuils RF sont provisoires et doivent etre "
+    "evalues sur des tests independants."
+)
+
+
+
+
